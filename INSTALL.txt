@@ -1,0 +1,136 @@
+############################################################################
+# The Broad Institute
+# SOFTWARE COPYRIGHT NOTICE AGREEMENT
+# This software and its documentation are copyright 2007 by the
+# Broad Institute/Massachusetts Institute of Technology. All rights are
+# reserved.
+
+# This software is supplied without any warranty or guaranteed support
+# whatsoever. Neither the Broad Institute nor MIT can be responsible for its
+# use, misuse, or functionality.
+############################################################################
+
+BIRDSUITE RELEASE 1.5.3
+
+Tue Nov 19 2008
+
+http://wwwdev.broad.mit.edu/mpg/birdsuite/
+
+INTRODUCTION
+
+This Birdsuite release contains most of the files you need to build and install Birdsuite.  
+
+LIMITATIONS
+
+* Currently, this Birdsuite release only runs on 32- or 64-bit Linux systems, although it may be
+  possible to make it work on other systems, particularly if you have Matlab for the target
+  system.
+
+* Currently, Birdsuite metadata exists only for Affymetrix Genome-Wide Human SNP Array 5.0 and 6.0 arrays
+
+* Some files are not distributed by Broad Institute, and must be obtained from other parties.  
+
+PREREQUISITES
+
+* Java 1.5 or higher (http://www.java.com)
+* Python 2.4 or higher (http://www.python.org)
+* numpy Python package, version 1.0.1 or higher (http://numpy.scipy.org)
+* R 2.4 or higher (http://www.r-project.org)
+* mclust R package, version 3 or higher (http://lib.stat.cmu.edu/R/CRAN/web/packages/mclust/index.html)
+* Affymetrix Power Tools (APT) 1.8.6 or higher, binaries (http://www.affymetrix.com/support/developer/powertools/index.affx)
+* Affymetrix library bundle for Genome-Wide Human SNP Array 6.0 (http://www.affymetrix.com/Auth/support/downloads/library_files/genomewidesnp6_libraryfile.zip)
+
+PREREQUISITES FOR BUILDING EXECUTABLES FROM SOURCES
+
+For birdseye, Matlab compiler is required.
+
+For birdseed and larry_bird, the following are required:
+
+* G++ 4.1.1 or higher (http://gcc.gnu.org)
+* Affymetrix Power Tools (APT) 1.8.6 or higher, sources and libraries (http://www.affymetrix.com/support/developer/powertools/index.affx)
+
+CONTENTS
+
+This Birdsuite release includes 4 gzipped archives:
+
+birdsuite_executables_<version>.tgz:  Scripts and executables that are already built.
+MCRInstaller.75.glnxa64.bin.gz: Matlab 7.5 compiled runtime for 64-bit Linux
+MCRInstaller.75.glnx86.bin.gz: Matlab 7.5 compiled runtime for 32-bit Linux
+birdsuite_metadata_<version>.tgz:     Metadata required by Birdsuite.
+birdsuite_inputs_<version>.tgz:  Test inputs for birdsuite (optional)
+birdsuite_outputs_<version>.tgz: Output from test inputs  (optional)
+birdsuite_sources_<version>.tgz:      Source code (optional)
+
+INSTALLATION
+
+1. Create a directory where all the Birdsuite executables will go.  We'll call this
+   EXEDIR.
+
+2. Unpack birdsuite_executables_<version>.tgz into EXEDIR.  
+
+3. For 64-bit, copy (or symlink) the 64-bit version of apt-probeset-summarize from
+   Affymetrix Power Tools into EXEDIR, with the name apt-probeset-summarize.64 .  
+
+   For 32-bit, copy or symlink the 32-bit version of apt-probeset-summarize into EXEDIR,
+   with the name apt-probeset-summarize .
+
+   Note that you may do both of the above to run on both 32- and 64-bit systems.
+
+
+4. Run the following commands:
+   R CMD INSTALL -l EXEDIR EXEDIR/broadgap.utils_<version>.tar.gz 
+   R CMD INSTALL -l EXEDIR EXEDIR/broadgap.cnputils_<version>.tar.gz 
+   R CMD INSTALL -l EXEDIR EXEDIR/broadgap.canary_<version>.tar.gz
+
+5. For 64-bit:
+       Download MCRInstaller.75.glnxa64.bin.gz and decompress into temporary directory.
+       Run the following command:
+           MCRInstaller.75.glnxa64.bin -console
+       When prompted for a directory into which to install MCR, reply with EXEDIR/MCR75_glnxa64
+       MCRInstaller.75.glnxa64.bin may be deleted after installation is complete.
+
+    For 32-bit:
+       Download MCRInstaller.75.glnx86.bin.gz and decompress into temporary directory.
+       Run the following command:
+           MCRInstaller.75.glnx86.bin -console
+       When prompted for a directory into which to install MCR, reply with EXEDIR/MCR75_glnx86
+       MCRInstaller.75.glnx86.bin may be deleted after installation is complete.
+
+   Note that you may do both of the above to run on both 32- and 64-bit systems.
+
+
+7. Create a directory where all the Birdsuite metadata will go: METADATADIR
+
+8. Unpack birdsuite_metadata_<version>.tgz into METADATADIR.
+
+9. Copy the following files from the Affymetrix library bundle
+    (genomewidesnp6_libraryfile.zip) into METADATADIR: GenomeWideSNP_6.Full.cdf,
+    GenomeWideSNP_6.specialSNPs
+    (For 5.0 chip, copy the analogous files.)
+
+10. Edit EXEDIR/birdsuite.sh, and add the following arguments to the java command line:
+    --exeDir=EXEDIR --metadataDir=METADATADIR
+
+If you wish to use the birdsuite_qc.py script, which makes running mini-DM and gender
+calling easier, follow these additional installation steps.
+
+1. Copy or symlink GenomeWideSNP_6.cdf into METADATADIR.
+    (For 5.0 chip, copy the analogous files)
+
+2. Copy or symlink apt-geno-qc (from APT) into EXEDIR.
+
+TESTING
+
+1. Create a directory (TESTDIR) and unpack birdsuite_inputs_<version>.tgz there.  
+
+2. cd to TESTDIR.
+
+3. Run the following command: 
+   EXEDIR/birdsuite.sh --basename=test --chipType=GenomeWideSNP_6 --outputDir=output --genderFile=test.gender --celFiles=test.cels --noLsf --apt_probeset_summarize.force
+
+4. Create a directory (EXPECTEDDIR) and unpack birdsuite_outputs_<version>.tgz there.
+
+5. Compare the files test.birdseed_calls, test.birdseed_confs, test.canary_calls,
+   test.canary_confs, test.larry_bird_calls, test.larry_bird_confs in EXPECTEDDIR
+   and TESTDIR/output.  They should be identical.
+

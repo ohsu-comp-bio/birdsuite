@@ -1,0 +1,24 @@
+1.5.1
+initial post-publication release of birdsuite
+
+1.5.2
+added newer command line options
+added phone home version checking
+added ability to take canary configurations to tune canary to population specific data
+
+1.5.3
+Added prototype compatability for illumina platform
+corrected bug with birdseye problems with relative paths causing matlab to crash
+added a revised version of birdseye incorperating bug fixes to make it compatable with illumina
+added support for numpy 1.2
+added initial meta data release for illumina 610 and 1M platforms
+Illumina is not yet a supported platform - data produced may not be accurate, birdsuite may crash
+
+1.5.4
+Fixed bug in 32-bit version of birdseye script calling wrong version of matlab
+Changed python packaging to EGG format.  This may require a user to set a PYTHONPATH enviornment variable to
+point to the library directory where the EGGs are installed.
+
+1.5.5
+Update for birdseye to call Y chromosome
+
