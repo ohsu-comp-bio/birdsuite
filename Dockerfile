@@ -75,4 +75,4 @@ RUN tar -zxvf broadgap.canary_${CANARY_VERSION}.tar.gz && \
 # Run Birdsuite
 ENV PATH=${BIRDSUITE}/bin:$PATH
 WORKDIR /opt/
-CMD ["birdsuite.sh"]
+ENTRYPOINT ["birdsuite.sh"]
