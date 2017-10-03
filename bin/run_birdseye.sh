@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # The Broad Institute
 # SOFTWARE COPYRIGHT NOTICE AGREEMENT
 # This software and its documentation are copyright 2007 by the

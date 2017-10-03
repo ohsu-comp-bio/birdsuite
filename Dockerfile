@@ -5,61 +5,48 @@ ENV MCLUST_VERSION 5.3
 ENV UTILS_VERSION 1.0
 ENV CNPUTILS_VERSION 1.0
 ENV CANARY_VERSION 1.0
-ENV MCRINSTALLER_VERSION 75.glnxa64
+ENV MCRINSTALLER_VERSION 75
 ENV APT_VERSION 1.20.5
 
 ENV BIRDSUITE /opt/birdsuite
-ENV METADATA /opt/metadata
-ENV AFFY /opt/data
 
 RUN apt-get update  && \
-    apt-get install -y build-essential bc gcc make wget libxp6 openjdk-6-jdk python python-numpy python-dev python-pip r-base r-base-dev
+    apt-get install -y build-essential bc gcc git make wget libxp6 openjdk-6-jdk python python-numpy python-dev python-pip r-base r-base-dev
+
+WORKDIR /opt/
 
 # Download Birdsuite
-RUN mkdir $BIRDSUITE && \
-    wget ftp://ftp.broadinstitute.org/pub/mpg/birdsuite/birdsuite_executables_${BIRDSUITE_VERSION}.tgz -O ${BIRDSUITE}/birdsuite_executables_${BIRDSUITE_VERSION}.tgz && \
-    cd $BIRDSUITE && \
-    tar -zxvf birdsuite_executables_${BIRDSUITE_VERSION}.tgz
+RUN git clone https://github.com/ohsu-comp-bio/birdsuite.git
 
 # Copy metadata
-## FIX ##
-## Need to COPY metadata over or use --volumes ##
-RUN mkdir $METADATA && \
-    wget ftp://ftp.broadinstitute.org/pub/mpg/birdsuite/birdsuite_metadata_${BIRDSUITE_VERSION}.tgz -O ${METADATA}/birdsuite_metadata_${BIRDSUITE_VERSION}.tgz && \
-    cd $METADATA && \
-    tar -zxvf birdsuite_metadata_${BIRDSUITE_VERSION}.tgz
+COPY metadata metadata/
 
-RUN cd $AFFY && \
-    unzip genomewidesnp6_libraryfile.zip && \
-    cp CD_GenomeWideSNP_6_rev3/Full/GenomeWideSNP_6/LibFiles/GenomeWideSNP_6.Full.* ${METADATA}/
-
-# Download APT
-RUN cd ${BIRDSUITE} && \
-    wget https://downloads.thermofisher.com/Affymetrix_Softwares/apt-${APT_VERSION}-x86_64-intel-linux.zip && \
+# Install APT
+RUN wget https://downloads.thermofisher.com/Affymetrix_Softwares/apt-${APT_VERSION}-x86_64-intel-linux.zip && \
     unzip apt-${APT_VERSION}-x86_64-intel-linux.zip && \
-    chmod +x ${BIRDSUITE}/apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-probeset-summarize && \
-    ln -s ${BIRDSUITE}/apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-probeset-summarize ${BIRDSUITE}/apt-probeset-summarize.64 && \
-    ln -s ${BIRDSUITE}/apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-geno-qc ${BIRDSUITE}/apt-geno-qc
+    rm apt-${APT_VERSION}-x86_64-intel-linux.zip && \
+    chmod +x apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-probeset-summarize && \
+    ln -s /opt/apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-probeset-summarize ${BIRDSUITE}/bin/apt-probeset-summarize.64 && \
+    ln -s /opt/apt-${APT_VERSION}-x86_64-intel-linux/bin/apt-geno-qc ${BIRDSUITE}/bin/apt-geno-qc
+
 
 # Install MCR
-RUN mkdir /opt/MCR && \
-    wget ftp://ftp.broadinstitute.org/pub/mpg/birdsuite/MCRInstaller.${MCRINSTALLER_VERSION}.bin.gz -O /opt/MCR/MCRInstaller.${MCRINSTALLER_VERSION}.bin.gz && \
-    cd /opt/MCR && \
-    gunzip MCRInstaller.${MCRINSTALLER_VERSION}.bin.gz && \
-    chmod +x MCRInstaller.${MCRINSTALLER_VERSION}.bin && \
-    ./MCRInstaller.${MCRINSTALLER_VERSION}.bin -P bean421.installLocation="${BIRDSUITE}/MCR75_glnxa64" -silent && \
-    rm -rf /opt/MCR
-
-WORKDIR $BIRDSUITE
+WORKDIR MCR
+RUN wget ftp://ftp.broadinstitute.org/pub/mpg/birdsuite/MCRInstaller.${MCRINSTALLER_VERSION}.glnxa64.bin.gz && \
+    gunzip MCRInstaller.${MCRINSTALLER_VERSION}.glnxa64.bin.gz && \
+    chmod +x MCRInstaller.${MCRINSTALLER_VERSION}.glnxa64.bin && \
+    ./MCRInstaller.${MCRINSTALLER_VERSION}.glnxa64.bin -P bean421.installLocation="${BIRDSUITE}/bin/MCR75_glnxa64" -silent
 
 # Install python libs
-RUN pip install -y setuptools
-RUN python install.py 
+WORKDIR ${BIRDSUITE}/bin
+RUN pip install --upgrade setuptools
+RUN python install.py -g /opt/birdsuite/eggs/
 
 ## Install R packages
+WORKDIR ${BIRDSUITE}/lib
 
 # Install mclust
-RUN wget https://cran.r-project.org/src/contrib/mclust_${MCLUST_VERSION}.tar.gz -O ${BIRDSUITE}/mclust_${MCLUST_VERSION}.tar.gz && \
+RUN wget https://cran.r-project.org/src/contrib/mclust_${MCLUST_VERSION}.tar.gz && \
     R CMD INSTALL mclust_${MCLUST_VERSION}.tar.gz && \
     rm mclust_${MCLUST_VERSION}.tar.gz 
 
@@ -84,3 +71,8 @@ RUN tar -zxvf broadgap.canary_${CANARY_VERSION}.tar.gz && \
     rm -rf broadgap.canary && \
     R CMD INSTALL broadgap.canary_${CANARY_VERSION}.tar.gz && \
     rm broadgap.canary_${CANARY_VERSION}.tar.gz
+
+# Run Birdsuite
+ENV PATH=${BIRDSUITE}/bin:$PATH
+WORKDIR /opt/
+CMD ["birdsuite.sh"]
